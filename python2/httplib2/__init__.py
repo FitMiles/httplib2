@@ -300,7 +300,10 @@ def _parse_www_authenticate(headers, headername='www-authenticate'):
                 if headername == 'authentication-info':
                     (auth_scheme, the_rest) = ('digest', authenticate)
                 else:
-                    (auth_scheme, the_rest) = authenticate.split(" ", 1)
+                    auth_parts = authenticate.split(" ", 1)
+                    # Some servers just send back 'Basic' with nothing else
+                    auth_scheme = auth_parts[0]
+                    the_rest = ' '.join(auth_parts[1:])
                 # Now loop over all the key value pairs that come after the scheme,
                 # being careful not to roll into the next scheme
                 match = www_auth.search(the_rest)
@@ -314,7 +317,7 @@ def _parse_www_authenticate(headers, headername='www-authenticate'):
                 authenticate = the_rest.strip()
 
         except ValueError:
-            raise MalformedHeader("WWW-Authenticate")
+            raise MalformedHeader("WWW-Authenticate", headers[headername])
     return retval
 
 
